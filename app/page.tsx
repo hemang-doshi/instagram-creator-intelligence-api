@@ -1,66 +1,58 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { getPublicAppName } from "@/lib/env";
 
 export default function Home() {
+  const appName = getPublicAppName();
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="shell">
+      <section className="hero">
+        <p className="eyebrow">Read-only analytics for Custom GPT Actions</p>
+        <h1>{appName}</h1>
+        <p className="lede">
+          Minimal Next.js API wrapper for Instagram Creator insights. This service
+          exposes authenticated REST endpoints, a GPT-friendly OpenAPI document,
+          and no client-side secret handling.
+        </p>
+      </section>
+
+      <section className="panel">
+        <h2>Quick links</h2>
+        <div className="linkGrid">
+          <a href="/api/health">/api/health</a>
+          <a href="/api/openapi.json">/api/openapi.json</a>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="panel">
+        <h2>Authenticated endpoints</h2>
+        <ul>
+          <li>
+            <code>GET /api/instagram/profile</code>
+          </li>
+          <li>
+            <code>GET /api/instagram/recent-media?limit=12</code>
+          </li>
+          <li>
+            <code>GET /api/instagram/media/:mediaId/insights</code>
+          </li>
+          <li>
+            <code>GET /api/instagram/reel-report?limit=10</code>
+          </li>
+        </ul>
+        <p className="note">
+          Send the private <code>x-api-key</code> header to every Instagram endpoint.
+          This page never renders secrets.
+        </p>
+      </section>
+
+      <section className="panel">
+        <h2>Creator analysis intent</h2>
+        <p className="taste">
+          Clean tech aesthetic. Calm but sharp futurism. Engineering, internships,
+          builder-in-public, honest humor, cinematic restraint, premium subtle captions.
+          No cheap CapCut energy, no generic AI-bro posturing, no fake productivity flexes.
+        </p>
+      </section>
+    </main>
   );
 }
