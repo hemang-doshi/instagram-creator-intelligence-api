@@ -69,7 +69,7 @@ curl -H "x-api-key: YOUR_CREATOR_API_KEY" \
   https://your-domain.vercel.app/api/instagram/profile
 ```
 
-You should see your Instagram profile data with `follows`, `profileVisits`, and `profileActivity` fields.
+You should see your Instagram profile data with `follows`, `profileVisits`, and `profileActivity` fields. `follows` may be `null` when Meta does not return a follows breakdown for the account.
 
 ---
 

@@ -173,33 +173,51 @@ describe("fetchAccountInsights", () => {
   it("returns parsed account-level insights", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        mockFetchResponse({
-          data: [
-            {
-              name: "follows",
-              period: "day",
-              values: [{ value: 15, end_time: "2026-01-11T08:00:00+0000" }],
-              title: "Follows",
-              description: "Number of follows",
-            },
-            {
-              name: "profile_visits",
-              period: "day",
-              values: [{ value: 42, end_time: "2026-01-11T08:00:00+0000" }],
-              title: "Profile Visits",
-              description: "Number of profile visits",
-            },
-            {
-              name: "profile_activity",
-              period: "day",
-              values: [{ value: 7, end_time: "2026-01-11T08:00:00+0000" }],
-              title: "Profile Activity",
-              description: "Number of profile activities",
-            },
-          ],
-        }),
-      ),
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          mockFetchResponse({
+            data: [
+              {
+                name: "profile_views",
+                period: "day",
+                total_value: { value: 42 },
+                title: "Profile Views",
+                description: "Number of profile views",
+              },
+              {
+                name: "profile_links_taps",
+                period: "day",
+                total_value: { value: 7 },
+                title: "Profile Links Taps",
+                description: "Number of profile link taps",
+              },
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse({
+            data: [
+              {
+                name: "follows_and_unfollows",
+                period: "day",
+                total_value: {
+                  breakdowns: [
+                    {
+                      dimension_keys: ["follow_type"],
+                      results: [
+                        { dimension_values: ["follows"], value: 15 },
+                        { dimension_values: ["unfollows"], value: 3 },
+                      ],
+                    },
+                  ],
+                },
+                title: "Follows and Unfollows",
+                description: "Daily follows and unfollows",
+              },
+            ],
+          }),
+        ),
     );
 
     const result = await fetchAccountInsights();
@@ -212,29 +230,34 @@ describe("fetchAccountInsights", () => {
   it("returns null for metrics not present in response", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        mockFetchResponse({
-          data: [
-            {
-              name: "follows",
-              period: "day",
-              values: [{ value: 5 }],
-              title: "Follows",
-              description: "Follows",
-            },
-          ],
-        }),
-      ),
+      vi
+        .fn()
+        .mockResolvedValueOnce(mockFetchResponse({ data: [] }))
+        .mockResolvedValueOnce(
+          mockFetchResponse({
+            data: [
+              {
+                name: "follows_and_unfollows",
+                period: "day",
+                total_value: {
+                  breakdowns: [{ dimension_keys: ["follow_type"] }],
+                },
+                title: "Follows and Unfollows",
+                description: "No breakdown values available",
+              },
+            ],
+          }),
+        ),
     );
 
     const result = await fetchAccountInsights();
 
-    expect(result.follows).toBe(5);
+    expect(result.follows).toBeNull();
     expect(result.profileVisits).toBeNull();
     expect(result.profileActivity).toBeNull();
   });
 
-  it("calls the user insights endpoint with period=day", async () => {
+  it("calls the user insights endpoint with the current supported metrics", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(mockFetchResponse({ data: [] }));
@@ -242,10 +265,14 @@ describe("fetchAccountInsights", () => {
 
     await fetchAccountInsights();
 
-    expect(fetchMock).toHaveBeenCalledOnce();
-    const url = fetchMock.mock.calls[0][0];
-    expect(url.toString()).toContain("/17841400000000000/insights");
-    expect(url.toString()).toContain("period=day");
-    expect(url.toString()).toContain("metric=");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const firstUrl = fetchMock.mock.calls[0][0];
+    const secondUrl = fetchMock.mock.calls[1][0];
+    expect(firstUrl.toString()).toContain("/17841400000000000/insights");
+    expect(firstUrl.toString()).toContain("period=day");
+    expect(firstUrl.toString()).toContain("metric=profile_views%2Cprofile_links_taps");
+    expect(firstUrl.toString()).toContain("metric_type=total_value");
+    expect(secondUrl.toString()).toContain("metric=follows_and_unfollows");
+    expect(secondUrl.toString()).toContain("breakdown=follow_type");
   });
 });

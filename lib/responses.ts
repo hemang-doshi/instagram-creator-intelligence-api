@@ -8,6 +8,28 @@ const NO_STORE_HEADERS = {
   "Cache-Control": "no-store",
 } as const;
 
+function withMetaErrorHints(details: unknown): unknown {
+  if (!details || typeof details !== "object") {
+    return details;
+  }
+
+  const payload = details as {
+    error?: { code?: number; message?: string };
+  };
+  const code = payload.error?.code;
+  const message = payload.error?.message ?? "";
+
+  if (code === 190 && message.includes("Cannot parse access token")) {
+    return {
+      ...payload,
+      hint:
+        "META_ACCESS_TOKEN is malformed, truncated, or the wrong token type. Generate a fresh long-lived Instagram/Facebook user token and update the deployment env.",
+    };
+  }
+
+  return details;
+}
+
 export function jsonResponse(payload: unknown, status = 200): Response {
   return Response.json(payload, {
     status,
@@ -78,7 +100,7 @@ export function handleRouteError(error: unknown): Response {
       error.status,
       error.message,
       "meta_graph_api",
-      error.details,
+      withMetaErrorHints(error.details),
       extraHeaders,
     );
   }

@@ -71,17 +71,17 @@ export function buildOpenApiSchema(origin: string) {
             follows: {
               type: ["integer", "null"],
               description:
-                "New follows during the current day period (from account insights).",
+                "Daily follows from Meta's current follows/unfollows account-insights breakdown, or null when Meta does not return a follows breakdown for the account.",
             },
             profileVisits: {
               type: ["integer", "null"],
               description:
-                "Profile visits during the current day period (from account insights).",
+                "Profile views during the current day period from Meta account insights (`profile_views`).",
             },
             profileActivity: {
               type: ["integer", "null"],
               description:
-                "Profile activity count during the current day period (from account insights).",
+                "Profile link/button taps during the current day period from Meta account insights (`profile_links_taps`).",
             },
           },
         },
@@ -100,7 +100,7 @@ export function buildOpenApiSchema(origin: string) {
             totalFollows: {
               type: ["integer", "null"],
               description:
-                "New follows during the current day period, fetched from account-level insights (not summed per-media).",
+                "Daily follows from Meta's current follows/unfollows account-insights breakdown, or null when Meta does not return a follows breakdown for the account.",
             },
             averageWatchTimeMs: {
               type: ["integer", "null"],

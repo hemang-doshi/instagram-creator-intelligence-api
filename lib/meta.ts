@@ -55,17 +55,16 @@ export async function graphGet<T = Record<string, unknown>>(
     url.searchParams.set(key, String(value));
   }
 
-  // Send the access token via the `Authorization: Bearer` header instead of
-  // a query string parameter. This keeps the token out of access logs, CDN
-  // logs, and `referer` headers, which is the Meta-recommended approach for
-  // long-lived tokens. The `?access_token=` form is still supported as a
-  // fallback when the header is not accepted.
+  // Meta's current Instagram/Graph API docs still show `access_token` as a
+  // request parameter for these read endpoints. Keep auth aligned with the
+  // documented request format rather than relying on bearer-header support.
+  url.searchParams.set("access_token", env.META_ACCESS_TOKEN);
+
   const response = await fetch(url, {
     method: "GET",
     cache: "no-store",
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${env.META_ACCESS_TOKEN}`,
     },
   });
 

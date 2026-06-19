@@ -88,6 +88,22 @@ describe("handleRouteError", () => {
     expect(res.headers.get("Retry-After")).toBe("30");
   });
 
+  it("adds a hint for unparseable Meta access tokens", async () => {
+    const error = new MetaGraphError(
+      "Meta Graph API request failed",
+      401,
+      {
+        error: {
+          code: 190,
+          message: "Invalid OAuth access token - Cannot parse access token",
+        },
+      },
+    );
+    const res = handleRouteError(error);
+    const body = await res.json();
+    expect(body.error.details.hint).toContain("META_ACCESS_TOKEN");
+  });
+
   it("handles EnvError with 500 and missing keys", async () => {
     const error = new EnvError(["META_ACCESS_TOKEN", "IG_USER_ID"]);
     const res = handleRouteError(error);

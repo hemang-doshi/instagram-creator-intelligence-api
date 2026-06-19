@@ -27,9 +27,8 @@ const MEDIA_FIELDS = [
 //   `plays`, `ig_reels_aggregated_all_plays_count`, `clips_replays_count`,
 //   and the legacy `video_views`).
 // - `impressions` is deprecated for media created on or after July 2, 2024.
-// - Account-level metrics (profile_activity, profile_visits, follows) are
-//   fetched via fetchAccountInsights() instead — they require the
-//   /{ig-user-id}/insights endpoint with period=day.
+// - Account-level metrics are fetched via fetchAccountInsights() instead —
+//   they require the /{ig-user-id}/insights endpoint.
 const INSIGHT_GROUPS: ReadonlyArray<ReadonlyArray<string>> = [
   ["views", "reach", "likes", "comments", "saved", "shares"],
   ["ig_reels_avg_watch_time", "ig_reels_video_view_total_time", "reels_skip_rate"],
@@ -99,8 +98,14 @@ export async function collectMediaInsights(mediaId: string): Promise<{
 /**
  * Fetch account-level insights for the configured Instagram user.
  *
- * Calls GET /{ig-user-id}/insights with metric=profile_activity,profile_visits,follows
- * and period=day. These metrics are not available on the per-media insights endpoint.
+ * Meta's current IG user insights API no longer accepts the legacy
+ * `profile_activity`, `profile_visits`, and `follows` metric names.
+ *
+ * We now use:
+ * - `profile_views` as the replacement for profile visits
+ * - `profile_links_taps` as the closest profile-action metric
+ * - `follows_and_unfollows` with `breakdown=follow_type` for follows, when
+ *   Meta returns breakdown values for the account
  */
 export async function fetchAccountInsights(): Promise<{
   follows: number | null;
@@ -108,21 +113,80 @@ export async function fetchAccountInsights(): Promise<{
   profileActivity: number | null;
 }> {
   const env = requireServerEnv();
-  const payload = await graphGet<InsightsPayload>(`${env.IG_USER_ID}/insights`, {
-    metric: ["profile_activity", "profile_visits", "follows"].join(","),
-    period: "day",
-  });
+  const [profilePayload, followsPayload] = await Promise.all([
+    graphGet<InsightsPayload>(`${env.IG_USER_ID}/insights`, {
+      metric: ["profile_views", "profile_links_taps"].join(","),
+      period: "day",
+      metric_type: "total_value",
+    }),
+    graphGet<InsightsPayload>(`${env.IG_USER_ID}/insights`, {
+      metric: "follows_and_unfollows",
+      period: "day",
+      metric_type: "total_value",
+      breakdown: "follow_type",
+    }),
+  ]);
 
-  const extract = (name: string): number | null => {
+  const extractMetricValue = (
+    payload: InsightsPayload,
+    name: string,
+  ): number | null => {
     const entry = (payload.data || []).find((d) => d.name === name);
     if (!entry) return null;
     const normalized = normalizeInsightMetric(entry);
     return typeof normalized.value === "number" ? normalized.value : null;
   };
 
+  const extractFollows = (payload: InsightsPayload): number | null => {
+    const entry = (payload.data || []).find((d) => d.name === "follows_and_unfollows");
+    if (!entry || typeof entry !== "object" || entry === null) {
+      return null;
+    }
+
+    const totalValue = entry.total_value;
+    if (!totalValue || typeof totalValue !== "object") {
+      return null;
+    }
+
+    const breakdowns = (totalValue as { breakdowns?: unknown }).breakdowns;
+    if (!Array.isArray(breakdowns)) {
+      return null;
+    }
+
+    for (const breakdown of breakdowns) {
+      if (!breakdown || typeof breakdown !== "object") {
+        continue;
+      }
+
+      const results = (breakdown as { results?: unknown }).results;
+      if (!Array.isArray(results)) {
+        continue;
+      }
+
+      for (const result of results) {
+        if (!result || typeof result !== "object") {
+          continue;
+        }
+
+        const dimensionValues = (result as { dimension_values?: unknown }).dimension_values;
+        const value = (result as { value?: unknown }).value;
+        const followType = Array.isArray(dimensionValues) ? dimensionValues[0] : null;
+
+        if (
+          (followType === "follows" || followType === "followed") &&
+          typeof value === "number"
+        ) {
+          return value;
+        }
+      }
+    }
+
+    return null;
+  };
+
   return {
-    follows: extract("follows"),
-    profileVisits: extract("profile_visits"),
-    profileActivity: extract("profile_activity"),
+    follows: extractFollows(followsPayload),
+    profileVisits: extractMetricValue(profilePayload, "profile_views"),
+    profileActivity: extractMetricValue(profilePayload, "profile_links_taps"),
   };
 }

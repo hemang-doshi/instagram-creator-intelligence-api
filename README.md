@@ -15,7 +15,7 @@ A read-only API wrapper around the **Instagram Graph API v25.0**, designed as a 
 
 - **Six endpoints** — health check, OpenAPI schema, profile, recent media, per-media insights, and a precomputed reel report
 - **Fully typed** — TypeScript strict mode throughout
-- **No SDKs** — pure `fetch()` against Meta's Graph API with Bearer token auth
+- **No SDKs** — pure `fetch()` against Meta's Graph API using the documented `access_token` request parameter
 - **Partial error resilience** — incompatible insight metrics return partial errors instead of crashing the response
 - **Client-side rate limiting** — token-bucket throttler synced to Meta's `X-Business-Use-Case-Usage` headers
 - **In-memory TTL cache** — per-serverless-instance dedup for warm starts
@@ -212,7 +212,7 @@ npm test
 
 ## Security Notes
 
-- **Meta access token** is sent as `Authorization: Bearer` header — never in query strings
+- **Meta access token** is sent in the request format Meta documents for these endpoints: `access_token`
 - **API key** is validated using `crypto.timingSafeEqual()` (constant-time comparison)
 - **No secrets** are committed — `.env*` and `.vercel` are in `.gitignore`
 - **No logging** of tokens or API keys
@@ -246,9 +246,9 @@ Meta's own limits apply on top — see their [rate limiting docs](https://develo
 
 | Metric | Source |
 |---|---|
-| `follows` | Day-period new follows |
-| `profileVisits` | Day-period profile visits |
-| `profileActivity` | Day-period activity count |
+| `follows` | Day-period follows from Meta's `follows_and_unfollows` breakdown, or `null` if Meta omits the breakdown |
+| `profileVisits` | Day-period profile views from Meta's `profile_views` metric |
+| `profileActivity` | Day-period profile link/button taps from Meta's `profile_links_taps` metric |
 
 ### Not Requested (deprecated)
 

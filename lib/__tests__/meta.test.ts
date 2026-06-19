@@ -57,13 +57,13 @@ describe("graphGet", () => {
 
     expect(result).toEqual(data);
 
-    // Verify Bearer token is sent
+    // Verify the token is sent using the documented query parameter form.
     const callUrl = fetchMock.mock.calls[0][0] as URL;
     const callInit = fetchMock.mock.calls[0][1] as RequestInit;
     expect(callInit.headers).toMatchObject({
-      Authorization: "Bearer test-token",
+      Accept: "application/json",
     });
-    expect(callUrl.searchParams.get("access_token")).toBeNull(); // not in query
+    expect(callUrl.searchParams.get("access_token")).toBe("test-token");
   });
 
   it("throws MetaGraphError on non-200 response", async () => {
