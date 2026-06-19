@@ -1,4 +1,4 @@
-import { EnvError } from "@/lib/env";
+import { EnvError, EnvError_Message } from "@/lib/env";
 import { MetaGraphError } from "@/lib/meta";
 import { RateLimitError } from "@/lib/rate-limiter";
 
@@ -90,6 +90,10 @@ export function handleRouteError(error: unknown): Response {
       "server",
       { missingEnv: error.missingKeys },
     );
+  }
+
+  if (error instanceof EnvError_Message) {
+    return errorResponse(500, error.message, "server");
   }
 
   if (error instanceof Error) {
