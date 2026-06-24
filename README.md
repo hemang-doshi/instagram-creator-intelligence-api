@@ -1,120 +1,97 @@
 # Instagram Creator Intelligence API
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16.2-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![Instagram Graph API](https://img.shields.io/badge/Instagram%20Graph%20API-v25.0-E4405F?logo=instagram)](https://developers.facebook.com/docs/instagram-platform)
-[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?logo=vercel)](https://vercel.com)
-[![CI](https://img.shields.io/badge/tests-75%20passing-brightgreen)](https://github.com/hemang-doshi/instagram-creator-intelligence-api)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)](https://vercel.com)
 
-A read-only API wrapper around the **Instagram Graph API v25.0**, designed as a **[Custom GPT Action](https://openai.com/index/introducing-gpt-actions/) backend**. Deploy to Vercel, connect your GPT, and give it real creator analytics — not generic advice.
+Read-only Instagram creator analytics API built for **Custom GPT Actions**. Deploy it, point ChatGPT at the OpenAPI schema, and give your GPT real profile, media, and Reel performance data from the Instagram Graph API.
 
----
+**Production URL:** [https://instagram-creator-intelligence-api.vercel.app](https://instagram-creator-intelligence-api.vercel.app)  
+**OpenAPI schema:** [https://instagram-creator-intelligence-api.vercel.app/api/openapi.json](https://instagram-creator-intelligence-api.vercel.app/api/openapi.json)
 
-## Features
+## Why This Exists
 
-- **Six endpoints** — health check, OpenAPI schema, profile, recent media, per-media insights, and a precomputed reel report
-- **Fully typed** — TypeScript strict mode throughout
-- **No SDKs** — pure `fetch()` against Meta's Graph API using the documented `access_token` request parameter
-- **Partial error resilience** — incompatible insight metrics return partial errors instead of crashing the response
-- **Client-side rate limiting** — token-bucket throttler synced to Meta's `X-Business-Use-Case-Usage` headers
-- **In-memory TTL cache** — per-serverless-instance dedup for warm starts
-- **CDN caching** — `Cache-Control: public, s-maxage` on profile, media, and reel endpoints
-- **No database** — zero external dependencies beyond Next.js
-- **75 unit tests** — covering all lib modules with mocked Meta API responses
+Most GPTs that claim to help creators rely on screenshots, manual exports, or generic social-media heuristics. This service gives a Custom GPT a clean, authenticated, read-only API surface for real Instagram creator analytics.
 
----
+- Six endpoints covering health, schema, profile, recent media, per-media insights, and a Reel-first report
+- Strict TypeScript implementation with no SDK dependency layer
+- Meta-aware rate limiting and warm-instance caching
+- No database, no write operations, no publishing endpoints
 
-## Prerequisites
+## Who This Is For
+
+- **Custom GPT builders** who want a production-ready Actions backend instead of a demo schema
+- **Internal creator tooling teams** that need a thin read-only analytics service
+- **Lightweight analytics backends** that prefer Next.js + Vercel over a larger data platform
+
+## Quick Start
+
+### Prerequisites
 
 | Requirement | Version |
 |---|---|
-| **Node.js** | >= 20.18.0 |
-| **Instagram account** | Business or Creator (not personal) |
-| **Meta access token** | Long-lived, with scopes below |
-| **Vercel account** | (for deployment) |
+| **Node.js** | `>= 20.18.0` |
+| **Instagram account** | Business or Creator |
+| **Meta access token** | Long-lived |
+| **Hosting** | Any Node-compatible platform, Vercel recommended |
 
 ### Required Meta Scopes
 
-```
+```text
 instagram_basic
 instagram_manage_insights
 pages_show_list
 pages_read_engagement
 ```
 
----
-
-## Environment Variables
+### Environment Variables
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `IG_GRAPH_BASE` | No | `https://graph.facebook.com/v25.0` | Graph API base URL |
-| `IG_USER_ID` | **Yes** | — | Numeric Instagram account ID |
-| `META_ACCESS_TOKEN` | **Yes** | — | Long-lived Meta access token |
-| `CREATOR_API_KEY` | **Yes** | — | Private key for `x-api-key` header auth |
-| `NEXT_PUBLIC_APP_NAME` | No | `Instagram Creator Intelligence API` | Display name in OpenAPI schema |
-
-Copy [`.env.example`](./.env.example) and fill in your values:
+| `IG_USER_ID` | Yes | — | Numeric Instagram account ID |
+| `META_ACCESS_TOKEN` | Yes | — | Long-lived Meta access token |
+| `CREATOR_API_KEY` | Yes | — | Shared secret used in the `x-api-key` header |
+| `NEXT_PUBLIC_APP_NAME` | No | `Instagram Creator Intelligence API` | OpenAPI display name |
 
 ```bash
 cp .env.example .env.local
-```
-
----
-
-## Local Development
-
-```bash
 npm install
 npm run dev
 ```
 
-The API is served at `http://localhost:3000`.
+Local server: `http://localhost:3000`
 
-### Available Commands
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Start the dev server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run TypeScript type checking |
-| `npm test` | Run test suite (75 tests) |
-| `npm run test:watch` | Run tests in watch mode |
-
----
-
-## API Endpoints
+## API Surface
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `GET` | `/api/health` | None | Service health check |
 | `GET` | `/api/openapi.json` | None | OpenAPI 3.1 schema for GPT Actions |
-| `GET` | `/api/instagram/profile` | `x-api-key` | Profile + day-period account insights |
-| `GET` | `/api/instagram/recent-media?limit=N` | `x-api-key` | Recent media items (1–50) |
+| `GET` | `/api/instagram/profile` | `x-api-key` | Profile plus day-period account insights |
+| `GET` | `/api/instagram/recent-media?limit=N` | `x-api-key` | Recent media items, 1 to 50 |
 | `GET` | `/api/instagram/media/{mediaId}/insights` | `x-api-key` | Per-media insight metrics |
-| `GET` | `/api/instagram/reel-report?limit=N` | `x-api-key` | Reels with insights + precomputed summary |
+| `GET` | `/api/instagram/reel-report?limit=N` | `x-api-key` | Reels with insights and a precomputed summary |
 
-All authenticated endpoints require the `x-api-key` header.
+All authenticated endpoints require `x-api-key`.
 
 ### Quick Test
 
 ```bash
-curl http://localhost:3000/api/health
-curl -H "x-api-key: YOUR_KEY" http://localhost:3000/api/instagram/profile
-curl -H "x-api-key: YOUR_KEY" "http://localhost:3000/api/instagram/recent-media?limit=5"
-curl -H "x-api-key: YOUR_KEY" "http://localhost:3000/api/instagram/reel-report?limit=5"
+curl https://instagram-creator-intelligence-api.vercel.app/api/health
+curl -H "x-api-key: YOUR_KEY" \
+  https://instagram-creator-intelligence-api.vercel.app/api/instagram/profile
+curl -H "x-api-key: YOUR_KEY" \
+  "https://instagram-creator-intelligence-api.vercel.app/api/instagram/reel-report?limit=5"
 ```
 
----
+## Deploy and Connect a GPT
 
-## Deployment
+### Deploy
 
-### Vercel (Recommended)
-
-**Option A — Vercel CLI:**
+**Vercel**
 
 ```bash
 vercel
@@ -124,100 +101,61 @@ vercel env add CREATOR_API_KEY
 vercel --prod
 ```
 
-**Option B — Git integration:**
-
-1. Push to GitHub
-2. Import the repository in the [Vercel dashboard](https://vercel.com/new)
-3. Add the same environment variables in the Vercel project settings
-4. Deploy
-
-### Other Hosting
-
-This is a standard Next.js app. It deploys anywhere that supports Node.js ≥ 20.18. Set the same environment variables on your platform and run:
+**Any Node host**
 
 ```bash
 npm run build
 npm run start
 ```
 
----
+### Connect to ChatGPT
 
-## Custom GPT Integration
+1. Open your public schema URL: `https://your-domain/api/openapi.json`
+2. In ChatGPT, create or edit a Custom GPT
+3. Add a new Action and import the schema from URL
+4. Configure API key auth with header name `x-api-key`
+5. Use `getInstagramReelReport` as the first tool for content analysis
 
-1. **Deploy** the API to a public HTTPS URL
-2. **Open** `https://your-domain.vercel.app/api/openapi.json` — confirm valid JSON
-3. **In ChatGPT**, create or edit a Custom GPT → **Actions** → add new action
-4. **Set authentication** to `API Key`, header `x-api-key`, value = your `CREATOR_API_KEY`
-5. The GPT will discover all endpoints from the OpenAPI schema automatically
+For a full setup walkthrough, prompt library, and recommended GPT instructions, see [GPT-INTEGRATION-GUIDE.md](./GPT-INTEGRATION-GUIDE.md).
 
-**Recommended first action:** `getInstagramReelReport` — it returns only Reels with a precomputed summary so the GPT doesn't have to sum metrics across items.
+## Local Development
 
----
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript type checking |
+| `npm test` | Run the full test suite |
+| `npm run test:watch` | Run tests in watch mode |
 
-## Test Suite
+## Test Status
 
 ```bash
 npm test
 ```
 
-```
-✓ lib/__tests__/rate-limiter.test.ts  (7 tests)
-✓ lib/__tests__/meta.test.ts           (6 tests)
-✓ lib/__tests__/instagram.test.ts      (8 tests)
-✓ lib/__tests__/env.test.ts            (8 tests)
-✓ lib/__tests__/normalize.test.ts     (15 tests)
-✓ lib/__tests__/cache.test.ts         (14 tests)
-✓ lib/__tests__/responses.test.ts     (13 tests)
-✓ lib/__tests__/auth.test.ts          (4 tests)
-—————————————————————————————————————
-  8 test files  |  75 passed  |  0 failed
-```
-
-### Mocks
-
-- Meta API calls are mocked at the `fetch` level
-- Environment variables are injected via `vi.mock("@/lib/env")`
-- Rate limiter is mocked to avoid cross-test interference
-
----
+Current suite: `76` unit tests across auth, caching, environment loading, Meta API access, normalization, response shaping, rate limiting, and Instagram service logic.
 
 ## Architecture
 
+```text
+Route handlers
+  -> auth check via x-api-key
+  -> lib/instagram.ts orchestration
+  -> lib/meta.ts Graph API client
+  -> Meta usage header feedback into rate limiter
 ```
-┌─ Route Handlers ───────────────────────┐
-│  app/api/instagram/                    │
-│  ├── profile/route.ts                  │
-│  ├── recent-media/route.ts             │
-│  ├── media/[mediaId]/insights/route.ts │
-│  └── reel-report/route.ts              │
-└──────────┬─────────────────────────────┘
-           │ auth check (x-api-key)
-           ▼
-┌─ lib/instagram.ts ─────────────────────┐
-│  fetchRecentMedia()                    │
-│  collectMediaInsights()                │
-│  fetchAccountInsights()                │
-└──────────┬─────────────────────────────┘
-           │ Bearer token auth
-           ▼
-┌─ lib/meta.ts ──────────────────────────┐
-│  graphGet<T>(path, params)             │
-│  → rateLimiter.consume()               │
-│  → fetch() with Bearer header          │
-│  → rateLimiter.updateFromUsageHeaders()│
-└────────────────────────────────────────┘
-```
-
----
 
 ## Security Notes
 
-- **Meta access token** is sent in the request format Meta documents for these endpoints: `access_token`
-- **API key** is validated using `crypto.timingSafeEqual()` (constant-time comparison)
-- **No secrets** are committed — `.env*` and `.vercel` are in `.gitignore`
-- **No logging** of tokens or API keys
-- **Read-only** — no publishing, posting, or mutation endpoints
-- **No database** — no user data stored
+- Meta access tokens are forwarded in the documented `access_token` request parameter format
+- API keys are validated with `crypto.timingSafeEqual()`
+- No secrets are committed; `.env*` and `.vercel` are ignored
+- No token or API key logging
+- Read-only service with no publish or mutate capability
+- No database or long-term user-data storage
 
 ---
 

@@ -1,7 +1,28 @@
 {
   "name": "instagram-creator-intelligence-api",
+  "description": "Read-only Instagram creator analytics API for Custom GPT Actions, powered by the Instagram Graph API.",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "homepage": "https://instagram-creator-intelligence-api.vercel.app",
+  "bugs": {
+    "url": "https://github.com/hemang-doshi/instagram-creator-intelligence-api/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hemang-doshi/instagram-creator-intelligence-api.git"
+  },
+  "keywords": [
+    "instagram",
+    "instagram-graph-api",
+    "creator-analytics",
+    "custom-gpt",
+    "gpt-actions",
+    "openapi",
+    "nextjs",
+    "typescript",
+    "vercel"
+  ],
   "engines": {
     "node": ">=20.18.0"
   },

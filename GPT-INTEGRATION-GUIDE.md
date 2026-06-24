@@ -42,7 +42,7 @@ All without you pasting screenshots or manual copy-paste. The GPT calls the API 
 |---|---|
 | API deployed to Vercel (or any HTTPS endpoint) | ✅ Done |
 | `IG_USER_ID`, `META_ACCESS_TOKEN`, `CREATOR_API_KEY` set on production | ✅ Done |
-| `npm test` passes (75 tests) | ✅ Done |
+| `npm test` passes (76 tests) | ✅ Done |
 | `npm run build` passes | ✅ Done |
 | Custom GPTs available (ChatGPT Plus, Pro, or Team plan) | 🔲 You |
 
